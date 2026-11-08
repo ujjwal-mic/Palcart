@@ -1,0 +1,28 @@
+# docker-compose.yml  -  start the WHOLE project with one command:
+#
+#       docker compose up --build
+#
+# Then open  http://localhost:3000
+#
+# Before the first run:  copy .env.example to .env and fill in your keys.
+
+services:
+  backend:
+    build: .
+    env_file: .env # your keys are handed to the container here (never baked into the image)
+    environment:
+      # PayPal sends people back to this address after they approve a payment,
+      # and the server sends them on to the dashboard. Both are the same page here.
+      PUBLIC_BASE_URL: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000
+    volumes:
+      - ./artifacts:/app/artifacts # recordings and screenshots are kept here on your computer
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80" # open http://localhost:3000
+    depends_on:
+      - backend
+    restart: unless-stopped

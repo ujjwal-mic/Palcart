@@ -1,0 +1,18 @@
+# secrets: NEVER commit these
+.env
+.env.*
+!.env.example
+
+# generated files
+artifacts/
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+*.zip
+
+# computer / editor junk
+.DS_Store
+.vscode/
+.idea/
