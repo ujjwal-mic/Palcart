@@ -1,4 +1,4 @@
-# Dockerfile for the PalCart BACKEND (Python server + PayPal MCP server)
+# Dockerfile for the WHOLE of PalCart in ONE container (page + Python server + PayPal MCP server)
 # =====================================================================
 # A Dockerfile is a recipe for a "box" that has everything the app needs.
 # PalCart's backend needs TWO languages:
@@ -6,6 +6,17 @@
 #   - Node.js -> the official PayPal MCP server (@paypal/mcp)
 # So we start from a Node image and add Python on top.
 
+# ---- Stage 1: turn the React page into plain web files ----
+FROM node:20-slim AS web
+WORKDIR /web
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend ./
+# Empty = the page talks to the same address it was loaded from.
+ENV VITE_API_URL=""
+RUN npm run build
+
+# ---- Stage 2: the server (it also hands out the web files) ----
 FROM node:20-slim
 
 # 1. Install Python (apt is Debian's app installer).
@@ -31,6 +42,8 @@ RUN pip install --no-cache-dir --default-timeout=300 --retries 10 -r backend/req
 #    Keys are given to the container when it starts, never baked into the image.)
 COPY backend ./backend
 COPY agent ./agent
+# The built page. The Python server hands these files out at the main address.
+COPY --from=web /web/dist ./frontend_dist
 
 # Tell our code to use the PayPal MCP server we installed above.
 # The full path avoids mixing it up with a Python command that is also called "mcp".
